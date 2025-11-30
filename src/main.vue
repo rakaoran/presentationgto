@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import hljs from 'highlight.js';
-// Using Atom One Dark as it fits the villain aesthetic perfectly
 import 'highlight.js/styles/atom-one-dark.css'; 
 import frImg from './fr.png';
 import nfrImg from './nfr.png';
@@ -9,12 +8,31 @@ import nfrImg from './nfr.png';
 // --- PALETTE CONSTANTS (Reference) ---
 // Deep Black — #0A0A0A
 // Crimson Red — #C1121F
-// Dark Blood Red — #7A0F13
-// Gunmetal Gray — #2C2F33
-// Steel Silver — #BFC2C7
 // Royal Gold — #D4AF37
 
 const currentSlideIndex = ref(0);
+
+// --- NEW: Text Size Logic ---
+const textSizeOffset = ref(0); // 0 = default, >0 = bigger, <0 = smaller
+
+// Standard Tailwind text scale array
+const tailwindSizes = [
+    'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 
+    'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 
+    'text-7xl', 'text-8xl', 'text-9xl'
+];
+
+// Helper to shift text class up/down
+const tSize = (baseClass) => {
+    const currentIndex = tailwindSizes.indexOf(baseClass);
+    if (currentIndex === -1) return baseClass; // Safety check
+
+    // Calculate new index bounded by array length
+    let newIndex = currentIndex + textSizeOffset.value;
+    newIndex = Math.max(0, Math.min(newIndex, tailwindSizes.length - 1));
+    
+    return tailwindSizes[newIndex];
+};
 
 const slides = [
     {
@@ -383,30 +401,35 @@ const prevSlide = () => {
     if (currentSlideIndex.value > 0) currentSlideIndex.value--;
 };
 
-// Toggle Fullscreen Logic
 const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-        // Enter Fullscreen
         containerRef.value?.requestFullscreen().catch(err => {
             console.error(`Error attempting to enable fullscreen: ${err.message}`);
         });
     } else {
-        // Exit Fullscreen
         document.exitFullscreen();
     }
 };
 
-// Listen for fullscreen changes (handles ESC key automatically)
 const onFullscreenChange = () => {
     isFullscreen.value = !!document.fullscreenElement;
 };
+
+// --- Text Resize Controls ---
+const increaseText = () => textSizeOffset.value++;
+const decreaseText = () => textSizeOffset.value--;
+const resetText = () => textSizeOffset.value = 0;
 
 const handleKeydown = (e) => {
     if (e.key === 'ArrowRight' || e.key === 'Space') nextSlide();
     if (e.key === 'ArrowLeft') prevSlide();
     
-    // Press 'f' or 'F' to toggle fullscreen
     if (e.key.toLowerCase() === 'f') toggleFullscreen();
+
+    // Text Size
+    if (e.key === '+' || e.key === '=') increaseText();
+    if (e.key === '-' || e.key === '_') decreaseText();
+    if (e.key === '0') resetText();
 };
 
 onMounted(() => {
@@ -421,95 +444,84 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- MAIN CONTAINER: Deep Black Background -->
     <div class="w-full h-full min-h-screen flex items-center justify-center bg-[#0A0A0A] p-4 font-sans text-[#BFC2C7]">
         
-        <!-- SLIDE CARD -->
-        <!-- Logic: If fullscreen, we remove max-width, aspect-ratio, and borders to fill screen -->
         <div ref="containerRef"
             class="bg-[#0A0A0A] overflow-hidden flex flex-col villain-card transition-all duration-300"
             :class="isFullscreen 
                 ? 'w-full h-full' 
                 : 'w-full max-w-6xl aspect-video border border-[#7A0F13] shadow-[0_0_40px_rgba(193,18,31,0.15)] rounded-sm relative'">
 
-            <!-- Progress Bar -->
             <div class="h-1.5 bg-[#2C2F33] w-full shrink-0">
-                <!-- Crimson Red Progress with Glow -->
                 <div class="h-full bg-[#C1121F] shadow-[0_0_10px_#C1121F] transition-all duration-300 ease-out"
                     :style="{ width: progressPercentage + '%' }"></div>
             </div>
 
-            <!-- Slide Content Area -->
             <div class="flex-1 p-12 flex flex-col relative overflow-hidden bg-gradient-to-b from-[#0e0e0e] to-[#0A0A0A]">
                 <transition name="fade" mode="out-in">
                     <div :key="currentSlideIndex" class="h-full flex flex-col w-full">
 
-                        <!-- === TITLE SLIDE === -->
                         <div v-if="currentSlide.type === 'title'"
                             class="h-full flex flex-col justify-center items-center text-center">
-                            <!-- Royal Gold Title with slight text shadow -->
+                            
                             <h1 class="font-bold text-[#C1121F] mb-6 tracking-tight drop-shadow-md uppercase font-mono transition-all duration-300"
-                                :class="isFullscreen ? 'text-9xl' : 'text-7xl'">
+                                :class="tSize(isFullscreen ? 'text-9xl' : 'text-7xl')">
                                 {{ currentSlide.title }}
                             </h1>
                             <h2 class="text-[#D4AF37] mb-12 font-light tracking-widest uppercase border-b border-[#7A0F13] pb-2 transition-all duration-300"
-                                :class="isFullscreen ? 'text-4xl' : 'text-2xl'">
+                                :class="tSize(isFullscreen ? 'text-4xl' : 'text-2xl')">
                                 {{ currentSlide.subtitle }}
                             </h2>
                             <div class="flex gap-6">
                                 <span v-for="dev in currentSlide.developers" :key="dev"
                                     class="px-6 py-2 bg-[#1a1a1a] border border-[#7A0F13] text-[#BFC2C7] rounded hover:bg-[#7A0F13] hover:text-white transition-all duration-300 cursor-default"
-                                    :class="isFullscreen ? 'text-2xl' : 'text-base'">
+                                    :class="tSize(isFullscreen ? 'text-2xl' : 'text-base')">
                                     {{ dev }}
                                 </span>
                             </div>
                         </div>
 
-                        <!-- === LIST SLIDE === -->
                         <div v-else-if="currentSlide.type === 'list'" class="h-full flex flex-col">
                             <h2 class="font-bold text-[#D4AF37] mb-8 border-b border-[#2C2F33] pb-4 uppercase tracking-wider transition-all duration-300"
-                                :class="isFullscreen ? 'text-6xl' : 'text-4xl'">
+                                :class="tSize(isFullscreen ? 'text-6xl' : 'text-4xl')">
                                 {{ currentSlide.title }}
                             </h2>
                             <ul class="space-y-4 text-[#BFC2C7] flex-1 overflow-y-auto transition-all duration-300"
-                                :class="isFullscreen ? 'text-3xl' : 'text-xl'">
+                                :class="tSize(isFullscreen ? 'text-3xl' : 'text-xl')">
                                 <li v-for="(item, idx) in currentSlide.items" :key="idx" class="flex items-start group">
-                                    <!-- Custom bullet: Crimson Arrow -->
                                     <span class="text-[#C1121F] mr-4 transition-transform group-hover:translate-x-1">➤</span>
                                     <span v-html="item" class="group-hover:text-white transition-colors"></span>
                                 </li>
                             </ul>
-                            <!-- Quote Section -->
                             <div v-if="currentSlide.quote"
                                 class="mt-8 p-6 bg-[#0f0f0f] border-l-4 border-[#C1121F] italic text-[#BFC2C7] rounded-r shadow-lg transition-all duration-300"
-                                :class="isFullscreen ? 'text-2xl' : 'text-base'">
-                                <span class="text-[#7A0F13] text-2xl mr-2">"</span>
+                                :class="tSize(isFullscreen ? 'text-2xl' : 'text-base')">
+                                <span class="text-[#7A0F13] mr-2" :class="tSize('text-2xl')">"</span>
                                 {{ currentSlide.quote.text }}
-                                <span class="text-[#7A0F13] text-2xl ml-1">"</span>
+                                <span class="text-[#7A0F13] ml-1" :class="tSize('text-2xl')">"</span>
                                 <div class="mt-3 font-bold not-italic text-[#D4AF37] uppercase tracking-wide flex items-center gap-2"
-                                     :class="isFullscreen ? 'text-lg' : 'text-sm'">
+                                     :class="tSize(isFullscreen ? 'text-lg' : 'text-sm')">
                                     <span class="h-[1px] w-8 bg-[#D4AF37]"></span>
                                     {{ currentSlide.quote.author }}
                                 </div>
                             </div>
                         </div>
 
-                        <!-- === CODE SLIDE === -->
                         <div v-else-if="currentSlide.type === 'code'" class="h-full flex flex-col">
                             <div class="flex justify-between items-end border-b border-[#2C2F33] pb-4 mb-6">
                                 <h2 class="font-bold text-[#D4AF37] uppercase tracking-wide transition-all duration-300"
-                                    :class="isFullscreen ? 'text-5xl' : 'text-3xl'">
+                                    :class="tSize(isFullscreen ? 'text-5xl' : 'text-3xl')">
                                     {{ currentSlide.title }}
                                 </h2>
                                 <span class="text-[#7A0F13] font-mono border border-[#7A0F13] px-2 py-1 rounded"
-                                    :class="isFullscreen ? 'text-base' : 'text-xs'">
+                                    :class="tSize(isFullscreen ? 'text-base' : 'text-xs')">
                                     LANG: {{ currentSlide.language || 'AUTO' }}
                                 </span>
                             </div>
                             
                             <div class="flex-1 overflow-hidden flex flex-col md:flex-row gap-8">
                                 <div class="md:w-5/12 overflow-y-auto text-[#BFC2C7] space-y-4 pr-2 transition-all duration-300"
-                                     :class="isFullscreen ? 'text-2xl' : 'text-lg'">
+                                     :class="tSize(isFullscreen ? 'text-2xl' : 'text-lg')">
                                     <p v-for="(desc, idx) in currentSlide.description" :key="idx" 
                                        class="leading-relaxed border-l-2 border-[#2C2F33] pl-4 hover:border-[#C1121F] transition-colors">
                                        {{ desc }}
@@ -517,7 +529,6 @@ onUnmounted(() => {
                                 </div>
 
                                 <div class="md:w-7/12 bg-[#1e2127] rounded border border-[#2C2F33] p-1 overflow-hidden shadow-inner flex flex-col">
-                                    <!-- Mac-style fake header but Dark Mode -->
                                     <div class="bg-[#15171b] px-3 py-2 flex gap-2 border-b border-[#2C2F33]">
                                         <div class="w-3 h-3 rounded-full bg-[#C1121F]"></div>
                                         <div class="w-3 h-3 rounded-full bg-[#D4AF37]"></div>
@@ -525,21 +536,19 @@ onUnmounted(() => {
                                     </div>
                                     <div class="overflow-auto code-scroll flex-1 p-4">
                                         <pre class="hljs bg-transparent font-mono whitespace-pre !p-0 transition-all duration-300"
-                                            :class="isFullscreen ? 'text-lg' : 'text-sm'"
+                                            :class="tSize(isFullscreen ? 'text-lg' : 'text-sm')"
                                             v-html="highlightedCode"></pre>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- === IMAGE SLIDE === -->
                         <div v-else-if="currentSlide.type === 'image'" class="h-full flex flex-col">
                             <h2 class="font-bold text-[#D4AF37] mb-6 border-b border-[#2C2F33] pb-4 uppercase transition-all duration-300"
-                                :class="isFullscreen ? 'text-5xl' : 'text-3xl'">
+                                :class="tSize(isFullscreen ? 'text-5xl' : 'text-3xl')">
                                 {{ currentSlide.title }}
                             </h2>
                             <div class="flex-1 flex items-center justify-center bg-[#050505] rounded border border-[#2C2F33] relative group">
-                                <!-- Corner Accents -->
                                 <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#C1121F]"></div>
                                 <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#C1121F]"></div>
                                 
@@ -550,14 +559,13 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <!-- === SIMPLE/DEFAULT SLIDE === -->
                         <div v-else class="h-full flex flex-col justify-center items-center text-center p-12">
                             <h2 class="font-bold text-[#C1121F] mb-12 uppercase tracking-tight drop-shadow-[0_2px_10px_rgba(193,18,31,0.5)] transition-all duration-300"
-                                :class="isFullscreen ? 'text-8xl' : 'text-6xl'">
+                                :class="tSize(isFullscreen ? 'text-8xl' : 'text-6xl')">
                                 {{ currentSlide.title }}
                             </h2>
                             <p v-if="currentSlide.content" class="text-[#BFC2C7] max-w-4xl font-light leading-relaxed border-t border-b border-[#2C2F33] py-8 transition-all duration-300"
-                               :class="isFullscreen ? 'text-5xl' : 'text-3xl'">
+                               :class="tSize(isFullscreen ? 'text-5xl' : 'text-3xl')">
                                 {{ currentSlide.content }}
                             </p>
                         </div>
@@ -566,7 +574,6 @@ onUnmounted(() => {
                 </transition>
             </div>
 
-            <!-- FOOTER / CONTROLS -->
             <div class="bg-[#0f0f0f] border-t border-[#2C2F33] p-4 flex justify-between items-center text-[#757575] text-sm font-mono shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 bg-[#C1121F] rounded-full animate-pulse"></span>
@@ -574,7 +581,13 @@ onUnmounted(() => {
                 </div>
                 
                 <div class="flex gap-4 items-center">
-                    <!-- Added Fullscreen Toggle Button (Icon) -->
+                    
+                    <div class="flex items-center gap-2 border-r border-[#2C2F33] pr-4 mr-2" v-if="textSizeOffset !== 0">
+                        <button @click="resetText" class="text-[#C1121F] hover:text-white transition-colors" title="Reset Text Size (0)">
+                            TEXT SIZE {{ textSizeOffset > 0 ? '+' : '' }}{{ textSizeOffset }}
+                        </button>
+                    </div>
+
                     <button @click="toggleFullscreen" 
                         class="p-2 rounded hover:text-[#D4AF37] transition-colors duration-200" title="Toggle Fullscreen (F)">
                         <svg v-if="!isFullscreen" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
@@ -606,7 +619,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Dark Scrollbar for Code Blocks */
 .code-scroll::-webkit-scrollbar {
     height: 8px;
     width: 8px;
@@ -619,15 +631,13 @@ onUnmounted(() => {
     border-radius: 2px;
 }
 .code-scroll::-webkit-scrollbar-thumb:hover {
-    background: #7A0F13; /* Blood Red on hover */
+    background: #7A0F13; 
 }
 
-/* Override Highlight.js background to blend with container */
 .hljs {
     background: transparent !important;
 }
 
-/* Transitions */
 .fade-enter-active,
 .fade-leave-active {
     transition: all 0.3s ease;
@@ -642,7 +652,6 @@ onUnmounted(() => {
     transform: translateY(-10px);
 }
 
-/* Villain Card subtle scanline effect override (optional, cleaner without it but kept base simple) */
 .villain-card {
     background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
     background-size: 100% 2px, 3px 100%;
