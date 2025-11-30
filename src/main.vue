@@ -47,6 +47,7 @@ const slides = [
         title: 'Tech Stack',
         items: [
             '<strong class="text-[#D4AF37]">Golang</strong> (Backend)',
+            '<strong class="text-[#D4AF37]">Gin</strong> (API Framework)',
             '<strong class="text-[#D4AF37]">Websockets</strong> (Real-time comms)',
             '<strong class="text-[#D4AF37]">HTML/CSS/Typescript</strong>',
             '<strong class="text-[#D4AF37]">Vue.js</strong> (Frontend)',
@@ -63,6 +64,59 @@ const slides = [
         type: 'image',
         title: 'Non-Functional Requirements',
         imageSrc: nfrImg
+    },
+    {
+        type: 'list',
+        title: 'System Architectural Pattern: MVC',
+        items: [
+            '<strong class="text-[#D4AF37]">Model:</strong> (Core server logic)',
+            '<strong class="text-[#D4AF37]">View: </strong> (Front end)',
+            '<strong class="text-[#D4AF37]">Controller: </strong> (Server route handlers)',
+        ]
+    },
+    {
+        type: 'code',
+        title: 'Backend Architectural Pattern:',
+        description: ["Layered Architecture"],
+        code: `
+┌─────────────────────────────────┐
+│   Presentation Layer            │  
+│   (HTTP Handlers/Routes)        │ 
+├─────────────────────────────────┤
+│   Business Logic Layer          │
+│   (Game Logic)                  │ 
+├─────────────────────────────────┤
+│   Data Access Layer             │
+│   (Database/Repository)         │ 
+├─────────────────────────────────┤
+│   Infrastructure Layer          │
+│   (Shared/Utilities)            │ 
+└─────────────────────────────────┘`
+    },
+    {
+        type: 'code',
+        title: 'Monolith Feature-Based Modules',
+        code: `api
+├── cmd
+├── Dockerfile.dev
+├── Dockerfile.production
+├── internal
+    ├── authentication
+    │   ├── login.go
+    │   ├── logout.go
+    │   ├── route.go
+    │   ├── signup.go
+    ├── game
+    │   ├── gameroom.go
+    │   ├── handlers.go
+    │   ├── matchmaking.go
+    │   ├── player.go
+    │   ├── tickers.go
+    └── shared
+        ├── authorization
+        ├── configs
+        ├── database
+        └── logger`
     },
     {
         type: 'simple',
@@ -253,9 +307,9 @@ func (g *GameRoom) transitionToNextRound() { /*...*/ }`
         type: 'list',
         title: 'Deployment',
         items: [
-            'Custom Domain (rakaoran.dev)',
-            'Frontend: Cloudflare Pages (100% free)',
-            'Backend: VPS (api.rakaoran.dev)'
+            'Custom Domain',
+            'Frontend: Cloudflare Pages (https://rakaoran.dev)',
+            'Backend: VPS (https://api.rakaoran.dev)'
         ]
     },
     {
@@ -290,6 +344,8 @@ func (g *GameRoom) transitionToNextRound() { /*...*/ }`
             'Multithreading',
             'Web Security best practices',
             'New programming language (Golang)',
+            'API development',
+            'Browser behavior',
             'Real-time communication',
             'Deployment (DNS, Reverse Proxy, SSL, IP Adresses, CDN, HTTP and HTTPS, Containerization, Azure VPS)'
         ]
