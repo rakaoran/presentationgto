@@ -71,7 +71,7 @@ const slides = [
             '<strong class="text-[#D4AF37]">Vue.js</strong> (Frontend)',
             '<strong class="text-[#D4AF37]">PostgreSQL</strong> (Database)',
             '<strong class="text-[#D4AF37]">Protobuf</strong> (Data serialization)',
-            '<strong class="text-[#D4AF37]">NGINX & Certbot</strong> (Reverse proxy and SSL)'
+            '<strong class="text-[#D4AF37]">NGINX & Certbot</strong> (Reverse proxy and TLS)'
         ]
     },
     {
